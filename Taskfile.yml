@@ -1,0 +1,18 @@
+version: "3"
+
+vars:
+  _project_name_: "jenlib--getting-started"
+
+tasks:
+  default: [task info]
+
+  info:
+    desc: "Repo Information: {{._project_name_}}"
+    silent: true
+    cmds:
+    - |-
+      echo "
+      $(task -l)
+      ---
+      _project_name_: {{._project_name_}}
+      "

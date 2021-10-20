@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 
+# "run with bash _layout_/seeds/init_tasklib_repo.sh _spec_:here"
 
 # echo "#= [stage=resolve-deps]"
 _CUR_PATH_="epath:"
@@ -30,18 +31,25 @@ _CUR_PATH_=$(dirname $_CUR_PATH_)
 _me_parent_path_=$(dirname $0)
 
 if [[ "$WINDIR" != "" ]]; then
-    repo_root_path=$(git -C $_me_parent_path_ rev-parse --show-toplevel | repo_root_path=sed -e 's/\//\\\\/g' )
+    repo_root_path=$(git -C $_me_parent_path_ rev-parse --show-toplevel | sed -e 's/\//\\\\/g' )
 else
     repo_root_path=$(git -C $_me_parent_path_ rev-parse --show-toplevel) 
 fi
+
+
+[[ "$repo_root_path" == "" ]] \
+    && echo "missing var=repo_root_path is required" \
+    && exit 1
 
 echo "Will work in $repo_root_path"
 cd "$repo_root_path"
 
 cat <<EQF > "Taskfile.yml"
 version: "3"
+
 vars:
   _project_name_: "$(basename $repo_root_path)"
+
 tasks:
   default: [task info]
 
@@ -51,8 +59,43 @@ tasks:
     cmds:
     - |-
       echo "
+      \$(task -l)
+      ---
       _project_name_: {{._project_name_}}
       "
 EQF
 
-echo "[status _is_ ok] [artifacts _are_ Taskfile.yml _at_ $(pwd)]"
+task info | grep "Repo Information"
+
+if [[ "$?" != "0" ]]; then
+    echo "[status _is_ fail] [epath:/generate-files/Taskfile.yml]"
+    exit 1
+fi
+echo "[status _is_ ok] [epath:/generate-files] [artifacts _are_ Taskfile.yml _at_ $repo_root_path]" 
+
+
+# md
+# ## functions
+#
+# ### intentation
+#
+# > `_origin_` [stackoverflow.com:indenting-multi-line-output-in-a-shell-script](https://stackoverflow.com/questions/17484774/indenting-multi-line-output-in-a-shell-script)
+
+indent() { sed 's/^/  /'; }
+
+function indented {
+  local PIPE_DIRECTORY=$(mktemp -d)
+  trap "rm -rf '$PIPE_DIRECTORY'" EXIT
+
+  mkfifo "$PIPE_DIRECTORY/stdout"
+  mkfifo "$PIPE_DIRECTORY/stderr"
+
+  "$@" >"$PIPE_DIRECTORY/stdout" 2>"$PIPE_DIRECTORY/stderr" &
+  local CHILD_PID=$!
+
+  sed 's/^/  /' "$PIPE_DIRECTORY/stdout" &
+  sed 's/^/  /' "$PIPE_DIRECTORY/stderr" >&2 &
+  wait "$CHILD_PID"
+  rm -rf "$PIPE_DIRECTORY"
+}
+# /md
