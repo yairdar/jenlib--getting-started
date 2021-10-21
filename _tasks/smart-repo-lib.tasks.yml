@@ -1,0 +1,23 @@
+version: "3"
+
+tasks:
+
+  update-me:
+    desc: _
+    cmds:
+    - echo {{.TASK}} 
+
+  init-with-infralib:
+    desc: _
+    cmds:
+    - wget
+
+  run-in-dir:
+    desc: run task
+
+  mkdocs:init:
+    desc: _
+    cmds:
+    # - task: sync-from-origin
+    #   vars: initiator origin
+    - task -d _infra/tasklib-mkdocs-lib infest-this-repo

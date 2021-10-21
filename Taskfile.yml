@@ -1,10 +1,20 @@
 version: "3"
 
+includes:
+  smart-repo: _tasks/smart-repo-lib.tasks.yml
+  
 vars:
   _project_name_: "jenlib--getting-started"
 
 tasks:
   default: [task info]
+
+  list: {cmds: [task -l], desc: list tasks with description}
+
+  list-all: 
+    desc: _
+    cmds: 
+      - yq -p pv read Taskfile.yml "tasks.*.desc"
 
   info:
     desc: "Repo Information: {{._project_name_}}"
